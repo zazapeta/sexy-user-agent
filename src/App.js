@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react';
+import React, { Component, useState, useEffect, useRef } from 'react';
 import UAParser from 'ua-parser-js';
 import './App.css';
 
@@ -27,17 +27,7 @@ import {
   Refresh,
 } from '@material-ui/icons';
 
-function getUrlVars() {
-  let vars = {};
-  let parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(
-    m,
-    key,
-    value,
-  ) {
-    vars[key] = value;
-  });
-  return vars;
-}
+import { getQueryParams, getUserInfosFromUserAgent } from './utils';
 
 const styles = (theme) => ({
   root: {
@@ -70,8 +60,57 @@ function InfoIcon({ icon: Icon, ...rest }) {
   return <Info {...rest} value={<Icon style={{ fontSize: '2em' }} />} />;
 }
 
+// function useUAPArser() {
+//   useEffect(() => {
+//     const parser = new UAParser();
+//     let ua = getUrlVars()['ua'];
+//     if (ua) {
+//       ua = decodeURI(ua);
+//       parser.setUA(ua);
+//     }
+//     const device = parser.getDevice();
+//     const cw = getUrlVars()['cw'] || document.body.clientWidth;
+//     const ch = getUrlVars()['ch'] || document.body.clientHeight;
+//     const lg = getUrlVars()['lg'] || navigator.language.split('-').pop();
+//     this.setState({
+//       browser: parser.getBrowser(),
+//       lang: navigator.language || navigator.userLanguage,
+//       device:
+//         (device &&
+//           device.type &&
+//           DEVICES.find((d) => d.type === device.type)) ||
+//         DEVICE_DEFAULT,
+//       rawDevice: device,
+//       os: parser.getOS(),
+//       urlValue: ua
+//         ? window.location.href
+//         : encodeURI(
+//             window.location.origin +
+//               `?ua=${JSON.stringify(
+//                 parser.getUA(),
+//               )}&cw=${cw}&ch=${ch}&lg=${lg}`,
+//           ),
+//     });
+//   });
+// }
+
 function App({ classes }) {
-  const [browser, setBrowser] = useState({ name: 'Hello', version: 'World' });
+  const qs = getQueryParams(window.location.href);
+  const { browser, device, os, ua, cw, ch, lg } = {
+    ...qs,
+    ...getUserInfosFromUserAgent(navigator.userAgent),
+    ...getUserInfosFromUserAgent(qs.ua),
+  };
+  const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
+  const urlValue = encodeURI(
+    `${window.location.origin}?ua=${ua}&cw=${cw}&ch=${ch}&lg=${lg}`,
+  );
+
+  const inputUrl = useRef(null);
+  function copyTextFromUrlInput() {
+    alert('copie of' + inputUrl.current.value);
+  }
+
   return (
     <div className="App">
       <Button
@@ -96,10 +135,39 @@ function App({ classes }) {
             value={<Flag height={22} code={'FR'} />}
           />
         </List>
+        <Paper>
+          <TextField
+            className={classes.margin}
+            inputRef={inputUrl}
+            readOnly
+            autoFocus
+            type="url"
+            label="URL to copy"
+            onClick={copyTextFromUrlInput}
+            value={urlValue}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton>
+                    <FileCopy />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Snackbar
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            open={isSnackbarOpen}
+            message={<div>Copied</div>}
+            action={[<Check />]}
+          />
+        </Paper>
       </div>
     </div>
   );
 }
+
+function getUrlVars() {}
 
 class App__ extends Component {
   constructor(props) {

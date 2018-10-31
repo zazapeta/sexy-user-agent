@@ -1,4 +1,5 @@
-import { getQueryParams } from './utils';
+import UAParser from 'ua-parser-js';
+import { getQueryParams, getUserInfosFromUserAgent } from './utils';
 
 it('Should return the query parameters', () => {
   expect(
@@ -25,5 +26,17 @@ it('Should return the query parameters complex', () => {
     cw: decodeURI(cw),
     ch: decodeURI(ch),
     lg: decodeURI(lang),
+  });
+});
+
+it('Should return the user information as an object', () => {
+  const ua =
+    '%22Mozilla/5.0%20(X11;%20Linux%20x86_64)%20AppleWebKit/537.36%20(KHTML,%20like%20Gecko)%20Chrome/69.0.3497.100%20Safari/537.36%22';
+  const parser = new UAParser();
+  parser.setUA(ua);
+  expect(getUserInfosFromUserAgent(ua)).toMatchObject({
+    device: parser.getDevice(),
+    browser: parser.getBrowser(),
+    os: parser.getOS(),
   });
 });
