@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useState } from 'react';
 import UAParser from 'ua-parser-js';
 import './App.css';
 
@@ -70,7 +70,38 @@ function InfoIcon({ icon: Icon, ...rest }) {
   return <Info {...rest} value={<Icon style={{ fontSize: '2em' }} />} />;
 }
 
-class App extends Component {
+function App({ classes }) {
+  const [browser, setBrowser] = useState({ name: 'Hello', version: 'World' });
+  return (
+    <div className="App">
+      <Button
+        size="small"
+        color="primary"
+        href="https://github.com/zazapeta/sexy-user-agent"
+        variant="extendedFab"
+        style={{ opacity: 0.5, position: 'absolute', zIndex: 10 }}
+      >
+        GitHub
+      </Button>
+      <IconButton color="secondary" href={window.location.origin}>
+        <Refresh />
+      </IconButton>
+
+      <div className={classes.root}>
+        <List style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+          <Info title="Browser" label={browser.version} value={browser.name} />
+          <Info
+            title="Langue"
+            label={navigator.language}
+            value={<Flag height={22} code={'FR'} />}
+          />
+        </List>
+      </div>
+    </div>
+  );
+}
+
+class App__ extends Component {
   constructor(props) {
     super(props);
     this.state = {
