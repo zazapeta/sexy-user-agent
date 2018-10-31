@@ -93,8 +93,12 @@ class App extends Component {
 
   componentDidMount() {
     const parser = new UAParser();
+    let ua = getUrlVars()['ua'];
+    if (ua) {
+      ua = decodeURI(ua);
+      parser.setUA(ua);
+    }
     const device = parser.getDevice();
-    const ua = getUrlVars()['ua'];
 
     this.setState({
       browser: parser.getBrowser(),
