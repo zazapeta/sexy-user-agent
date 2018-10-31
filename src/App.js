@@ -9,10 +9,9 @@ import {
   TextField,
   ListItem,
   List,
-  Avatar,
   ListItemText,
-  Popover,
   Snackbar,
+  Button,
 } from '@material-ui/core';
 import Flag from 'react-world-flags';
 
@@ -139,12 +138,19 @@ class App extends Component {
     const isPortrait = document.body.clientHeight > document.body.clientWidth;
     return (
       <div className="App">
-        <IconButton
-          color="secondary"
-          onClick={() => (window.location = window.location.origin)}
+        <Button
+          size="small"
+          color="primary"
+          href="https://github.com/zazapeta/sexy-user-agent"
+          variant="extendedFab"
+          style={{ opacity: 0.5, position: 'absolute', zIndex: 10 }}
         >
+          GitHub
+        </Button>
+        <IconButton color="secondary" href={window.location.origin}>
           <Refresh />
         </IconButton>
+
         <div className={classes.root}>
           <List style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             <Info title="OS" label={os.version} value={os.name} />
