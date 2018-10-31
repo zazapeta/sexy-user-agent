@@ -98,7 +98,9 @@ class App extends Component {
       parser.setUA(ua);
     }
     const device = parser.getDevice();
-
+    const cw = getUrlVars()['cw'] || document.body.clientWidth;
+    const ch = getUrlVars()['ch'] || document.body.clientHeight;
+    const lg = getUrlVars()['lg'] || navigator.language.split('-').pop();
     this.setState({
       browser: parser.getBrowser(),
       lang: navigator.language || navigator.userLanguage,
@@ -112,7 +114,10 @@ class App extends Component {
       urlValue: ua
         ? window.location.href
         : encodeURI(
-            window.location.origin + '?ua=' + JSON.stringify(parser.getUA()),
+            window.location.origin +
+              `?ua=${JSON.stringify(
+                parser.getUA(),
+              )}&cw=${cw}&ch=${ch}&lg=${lg}`,
           ),
     });
   }
@@ -135,7 +140,11 @@ class App extends Component {
     const { browser, device, os, isOpen, rawDevice, urlValue } = this.state;
     const { classes } = this.props;
 
-    const isPortrait = document.body.clientHeight > document.body.clientWidth;
+    const cw = getUrlVars()['cw'] || document.body.clientWidth;
+    const ch = getUrlVars()['ch'] || document.body.clientHeight;
+    const lg = getUrlVars()['lg'] || navigator.language.split('-').pop();
+
+    const isPortrait = ch > cw;
     return (
       <div className="App">
         <Button
@@ -170,16 +179,8 @@ class App extends Component {
               label={browser.version}
               value={browser.name}
             />
-            <Info
-              title="Device size"
-              label="Width"
-              value={document.body.clientWidth}
-            />
-            <Info
-              title="Device size"
-              label="Height"
-              value={document.body.clientHeight}
-            />
+            <Info title="Device size" label="Width" value={cw} />
+            <Info title="Device size" label="Height" value={ch} />
 
             <InfoIcon
               title="Orientation"
@@ -189,9 +190,7 @@ class App extends Component {
             <Info
               title="Langue"
               label={navigator.language}
-              value={
-                <Flag height={22} code={navigator.language.split('-').pop()} />
-              }
+              value={<Flag height={22} code={lg} />}
             />
           </List>
 
