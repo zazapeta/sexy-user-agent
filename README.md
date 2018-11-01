@@ -1,4 +1,6 @@
-Informations :
+Just trying to make user agent a little bite sexy
+
+## DisplayedInformations :
 
 - OS(Linux / Mac OS / iOS / Android) + OS's Version
 - Browser's vendor + Browser's version + Browser family (Google Chrome 69.0.345) (image)
