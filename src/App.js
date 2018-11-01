@@ -1,5 +1,5 @@
-import React, { Component, useState, useEffect, useRef } from 'react';
-import UAParser from 'ua-parser-js';
+import React, { useState, useRef, useEffect } from 'react';
+import merge from 'lodash.merge';
 import './App.css';
 
 import {
@@ -60,42 +60,35 @@ function InfoIcon({ icon: Icon, ...rest }) {
   return <Info {...rest} value={<Icon style={{ fontSize: '2em' }} />} />;
 }
 
-// function useUAPArser() {
-//   useEffect(() => {
-//     const parser = new UAParser();
-//     let ua = getUrlVars()['ua'];
-//     if (ua) {
-//       ua = decodeURI(ua);
-//       parser.setUA(ua);
-//     }
-//     const device = parser.getDevice();
-//     const cw = getUrlVars()['cw'] || document.body.clientWidth;
-//     const ch = getUrlVars()['ch'] || document.body.clientHeight;
-//     const lg = getUrlVars()['lg'] || navigator.language.split('-').pop();
-//     this.setState({
-//       browser: parser.getBrowser(),
-//       lang: navigator.language || navigator.userLanguage,
-//       device:
-//         (device &&
-//           device.type &&
-//           DEVICES.find((d) => d.type === device.type)) ||
-//         DEVICE_DEFAULT,
-//       rawDevice: device,
-//       os: parser.getOS(),
-//       urlValue: ua
-//         ? window.location.href
-//         : encodeURI(
-//             window.location.origin +
-//               `?ua=${JSON.stringify(
-//                 parser.getUA(),
-//               )}&cw=${cw}&ch=${ch}&lg=${lg}`,
-//           ),
-//     });
-//   });
-// }
+function useUserInfos(qs, ua) {
+  const [userInfos, setUserInfos] = useState(
+    merge(
+      {
+        ua: navigator.userAgent,
+        cw: document.body.clientWidth,
+        ch: document.body.clientHeight,
+        lg: navigator.language.split('-').pop(),
+      },
+      getUserInfosFromUserAgent(navigator.userAgent),
+    ),
+  );
+  useEffect(
+    () => setUserInfos(merge(userInfos, qs, getUserInfosFromUserAgent(ua))),
+    [ua],
+  );
+  return userInfos;
+}
+
+const QS = getQueryParams(window.location.href, decodeURI);
 
 function App({ classes }) {
+  const { browser, device, os, ua, cw, ch, lg } = useUserInfos(
+    QS,
+    QS.ua || navigator.userAgent,
+  );
+
   const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
+
   const inputUrl = useRef(null);
 
   function copyTextFromUrlInput() {
@@ -105,19 +98,15 @@ function App({ classes }) {
     setTimeout(() => setIsSnackbarOpen(false), 3000);
   }
 
-  const qs = getQueryParams(window.location.href);
-  const { browser, device, os, ua, cw, ch, lg } = {
-    ua: navigator.userAgent,
-    cw: document.body.clientWidth,
-    ch: document.body.clientHeight,
-    lg: navigator.language.split('-').pop(),
-    ...qs,
-    ...getUserInfosFromUserAgent(navigator.userAgent),
-    ...getUserInfosFromUserAgent(qs.ua),
-  };
   const urlValue = encodeURI(
     `${window.location.origin}?ua=${ua}&cw=${cw}&ch=${ch}&lg=${lg}`,
   );
+  const deviceType = device.type || DEVICE_DEFAULT.type;
+  const deviceIcon =
+    (DEVICES[device.type] && DEVICES[device.type].icon) || DEVICE_DEFAULT.icon;
+  const deviceModel = device.model;
+  const deviceVendor = device.vendor;
+  const isPortrait = ch > cw;
 
   return (
     <div className="App">
@@ -136,11 +125,31 @@ function App({ classes }) {
 
       <div className={classes.root}>
         <List style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+          <Info title="OS" label={os.version} value={os.name} />
+          {deviceVendor && deviceModel ? (
+            <React.Fragment>
+              <InfoIcon
+                title="Device"
+                label={`${deviceVendor} - ${deviceModel}`}
+                icon={deviceIcon}
+              />
+            </React.Fragment>
+          ) : (
+            <InfoIcon title="Device" label={deviceType} icon={deviceIcon} />
+          )}
           <Info title="Browser" label={browser.version} value={browser.name} />
+          <Info title="Device size" label="Width" value={cw} />
+          <Info title="Device size" label="Height" value={ch} />
+
+          <InfoIcon
+            title="Orientation"
+            label={isPortrait ? 'Portrait' : 'Paysage'}
+            icon={isPortrait ? CropPortrait : Tablet}
+          />
           <Info
             title="Langue"
-            label={navigator.language}
-            value={<Flag height={22} code={'FR'} />}
+            label={lg}
+            value={<Flag height={22} code={lg} />}
           />
         </List>
         <Paper>
@@ -173,165 +182,6 @@ function App({ classes }) {
       </div>
     </div>
   );
-}
-
-function getUrlVars() {}
-
-class App__ extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      browser: {
-        name: '',
-        version: '',
-      },
-      lang: null,
-      device: DEVICE_DEFAULT,
-      os: {
-        name: '',
-        version: '',
-      },
-      isOpen: false,
-      urlValue: window.location.href,
-    };
-    this.handleUrlClick = this.handleUrlClick.bind(this);
-  }
-
-  componentDidMount() {
-    const parser = new UAParser();
-    let ua = getUrlVars()['ua'];
-    if (ua) {
-      ua = decodeURI(ua);
-      parser.setUA(ua);
-    }
-    const device = parser.getDevice();
-    const cw = getUrlVars()['cw'] || document.body.clientWidth;
-    const ch = getUrlVars()['ch'] || document.body.clientHeight;
-    const lg = getUrlVars()['lg'] || navigator.language.split('-').pop();
-    this.setState({
-      browser: parser.getBrowser(),
-      lang: navigator.language || navigator.userLanguage,
-      device:
-        (device &&
-          device.type &&
-          DEVICES.find((d) => d.type === device.type)) ||
-        DEVICE_DEFAULT,
-      rawDevice: device,
-      os: parser.getOS(),
-      urlValue: ua
-        ? window.location.href
-        : encodeURI(
-            window.location.origin +
-              `?ua=${JSON.stringify(
-                parser.getUA(),
-              )}&cw=${cw}&ch=${ch}&lg=${lg}`,
-          ),
-    });
-  }
-
-  handleUrlClick() {
-    this.urlInput.select();
-    document.execCommand('copy');
-    this.setState({
-      isOpen: true,
-    });
-    setTimeout(
-      () =>
-        this.setState({
-          isOpen: false,
-        }),
-      3000,
-    );
-  }
-  render() {
-    const { browser, device, os, isOpen, rawDevice, urlValue } = this.state;
-    const { classes } = this.props;
-
-    const cw = getUrlVars()['cw'] || document.body.clientWidth;
-    const ch = getUrlVars()['ch'] || document.body.clientHeight;
-    const lg = getUrlVars()['lg'] || navigator.language.split('-').pop();
-
-    const isPortrait = ch > cw;
-    return (
-      <div className="App">
-        <Button
-          size="small"
-          color="primary"
-          href="https://github.com/zazapeta/sexy-user-agent"
-          variant="extendedFab"
-          style={{ opacity: 0.5, position: 'absolute', zIndex: 10 }}
-        >
-          GitHub
-        </Button>
-        <IconButton color="secondary" href={window.location.origin}>
-          <Refresh />
-        </IconButton>
-
-        <div className={classes.root}>
-          <List style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-            <Info title="OS" label={os.version} value={os.name} />
-            {rawDevice && rawDevice.type ? (
-              <React.Fragment>
-                <InfoIcon
-                  title="Device"
-                  label={`${rawDevice.vendor} - ${rawDevice.model}`}
-                  icon={device.icon}
-                />{' '}
-              </React.Fragment>
-            ) : (
-              <InfoIcon title="Device" label={device.type} icon={device.icon} />
-            )}
-            <Info
-              title="Browser"
-              label={browser.version}
-              value={browser.name}
-            />
-            <Info title="Device size" label="Width" value={cw} />
-            <Info title="Device size" label="Height" value={ch} />
-
-            <InfoIcon
-              title="Orientation"
-              label={isPortrait ? 'Portrait' : 'Paysage'}
-              icon={isPortrait ? CropPortrait : Tablet}
-            />
-            <Info
-              title="Langue"
-              label={navigator.language}
-              value={<Flag height={22} code={lg} />}
-            />
-          </List>
-
-          <Paper>
-            <TextField
-              className={classes.margin}
-              inputRef={(urlInput) => (this.urlInput = urlInput)}
-              readOnly
-              autoFocus
-              type="url"
-              label="URL to copy"
-              onClick={this.handleUrlClick}
-              value={urlValue}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton>
-                      <FileCopy />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Snackbar
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-              open={isOpen}
-              message={<div>Copied</div>}
-              action={[<Check />]}
-            />
-          </Paper>
-        </div>
-      </div>
-    );
-  }
 }
 
 export default withStyles(styles)(App);
