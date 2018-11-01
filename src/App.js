@@ -95,21 +95,29 @@ function InfoIcon({ icon: Icon, ...rest }) {
 // }
 
 function App({ classes }) {
+  const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
+  const inputUrl = useRef(null);
+
+  function copyTextFromUrlInput() {
+    inputUrl.current.select();
+    document.execCommand('copy');
+    setIsSnackbarOpen(true);
+    setTimeout(() => setIsSnackbarOpen(false), 3000);
+  }
+
   const qs = getQueryParams(window.location.href);
   const { browser, device, os, ua, cw, ch, lg } = {
+    ua: navigator.userAgent,
+    cw: document.body.clientWidth,
+    ch: document.body.clientHeight,
+    lg: navigator.language.split('-').pop(),
     ...qs,
     ...getUserInfosFromUserAgent(navigator.userAgent),
     ...getUserInfosFromUserAgent(qs.ua),
   };
-  const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const urlValue = encodeURI(
     `${window.location.origin}?ua=${ua}&cw=${cw}&ch=${ch}&lg=${lg}`,
   );
-
-  const inputUrl = useRef(null);
-  function copyTextFromUrlInput() {
-    alert('copie of' + inputUrl.current.value);
-  }
 
   return (
     <div className="App">
